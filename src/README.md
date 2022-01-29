@@ -1,23 +1,24 @@
-# Getting Started with Fastify-CLI [Fastify-CLI](https://www.npmjs.com/package/fastify-cli)
-This project was bootstrapped with Fastify-CLI.
+# Mr_Heartbeatのソース
 
-## Available Scripts
+## ビルド&デバッグ方法
 
-In the project directory, you can run:
+基本的にコマンドプロンプトで動作します。
+本ディレクトリに移動し、状況に応じて以下を入力してください。
 
-### `npm run dev`
+### `npm install`
 
-To start the app in dev mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+初回動作のみ実行してください。
+動作に必要なライブラリ等をインストールします。
+
+### `npm build`
+
+ソースをビルドします。
+ビルド後のソースは「dist」ディレクトリに格納されます。
 
 ### `npm start`
 
-For production mode
+ソフトを実行します。
 
-### `npm run test`
+### `npm clean`
 
-Run the test cases.
-
-## Learn More
-
-To learn Fastify, check out the [Fastify documentation](https://www.fastify.io/docs/latest/).
+「dist」ディレクトリ内のファイルを削除します。

@@ -12,7 +12,7 @@ server.get('/', async (request, reply) => {
     reply.view(VIEW_NAME, { var01: 'test!!' })
 })
 
-server.listen(8080, (err, address) => {
+server.listen(3000, (err, address) => {
   if (err) throw err;
   console.log(`server listening on ${address}`)
 })
