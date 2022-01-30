@@ -3,25 +3,26 @@ const ts = require('gulp-typescript')
 const rimraf = require('rimraf')
 
 const tsProject = ts.createProject('tsconfig.json')
-const VIEW_FILES = ['./views/*.ejs']
+const VIEW_FILES = ['./views/**/*']
 
 
-function scripts(){
+function scripts() {
     const tsResult = tsProject.src()
-    .pipe(tsProject())
-    return tsResult.js.pipe(gulp.dest('dist'))
+        .pipe(tsProject())
+    return tsResult.js
+        .pipe(gulp.dest('dist'))
 }
 
-function setViews(){
+function setViews() {
     return gulp.src(VIEW_FILES)
-    .pipe(gulp.dest('dist/views'))
+        .pipe(gulp.dest('dist/views/ejs'))
 }
 
-function clean(cb){
+function clean(cb) {
     rimraf('./dist', cb)
 }
 
-function build(){
+function build() {
     return scripts()
 }
 
