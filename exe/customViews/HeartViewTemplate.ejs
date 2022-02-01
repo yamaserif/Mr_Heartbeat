@@ -13,7 +13,7 @@
 
         // ここから心拍数取得時の処理を定義できます。
         // 心拍数取得時に「updatePage()」がコールされるため、処理を記入してください。
-        // （引数は心拍数のデータが入力されます。）
+        // （引数には心拍数のデータがセットされます。）
         function updatePage(heartbeat){
             document.getElementById('heartbeat').innerHTML = heartbeat
         }
@@ -22,7 +22,16 @@
 
 <body>
     <!-- 以下にhtmlを自由に記述することができます。 -->
-    <div id="heartbeat"></div>
+    <p id="heartbeat" class="heartbeat"></p>
 </body>
+
+<style>
+    /* 以下にcssを自由に記述することができます。 */
+    .heartbeat {
+        font-size: 30vw;
+        color: navy;
+        margin: 0px;
+    }
+</style>
 
 </html>

@@ -37,7 +37,8 @@ const TITLE = '心拍数表示ページ';
 function ServerSetting(entryPath, server) {
     server.get(entryPath, (request, reply) => __awaiter(this, void 0, void 0, function* () {
         fs.readFile(SCRIPT_PATH, (err, file) => {
-            reply.view(VIEW_PATH, {
+            const viewPath = settings.viewEjsName ? './customViews/' + settings.viewEjsName : VIEW_PATH;
+            reply.view(viewPath, {
                 title: TITLE,
                 script: file,
                 reloadTime: settings.reloadTime,

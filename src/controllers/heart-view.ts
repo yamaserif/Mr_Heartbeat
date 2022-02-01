@@ -1,6 +1,5 @@
-import { FastifyInstance, FastifyRequest } from 'fastify'
+import { FastifyInstance } from 'fastify'
 import * as fs from 'fs';
-import { ReadableStreamBYOBRequest } from 'stream/web';
 const { settings } = require('./setting')
 
 const VIEW_PATH = 'views/ejs/heart-view.ejs'
@@ -11,7 +10,9 @@ const TITLE = '心拍数表示ページ'
 function ServerSetting(entryPath: string, server: FastifyInstance) {
   server.get(entryPath, async (request, reply) => {
     fs.readFile(SCRIPT_PATH, (err, file) => {
-      reply.view(VIEW_PATH,
+      const viewPath = settings.viewEjsName ? './customViews/' + settings.viewEjsName : VIEW_PATH
+
+      reply.view(viewPath,
         {
           title: TITLE,
           script: file,

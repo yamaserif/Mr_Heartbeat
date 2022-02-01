@@ -4,6 +4,7 @@ const rimraf = require('rimraf')
 
 const tsProject = ts.createProject('tsconfig.json')
 const VIEW_FILES = ['./views/**/*']
+const CUSTOM_VIEW_FILES = ['./customViews/*']
 const CREATE_EXE_SCRIPT_FILES = ['./createExeScripts/*']
 
 function scripts() {
@@ -16,6 +17,11 @@ function scripts() {
 function setViews() {
     return gulp.src(VIEW_FILES)
         .pipe(gulp.dest('dist/views'))
+}
+
+function setCustomViews() {
+    return gulp.src(CUSTOM_VIEW_FILES)
+        .pipe(gulp.dest('dist/customViews'))
 }
 
 function setCreateExeScripts() {
@@ -32,4 +38,4 @@ function build() {
 }
 
 exports.clean = clean
-exports.build = gulp.series(clean, gulp.parallel(build, setViews, setCreateExeScripts))
+exports.build = gulp.series(clean, gulp.parallel(build, setViews, setCustomViews, setCreateExeScripts))
