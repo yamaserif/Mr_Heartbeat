@@ -6,6 +6,7 @@ const tsProject = ts.createProject('tsconfig.json')
 const VIEW_FILES = ['./views/**/*']
 const CUSTOM_VIEW_FILES = ['./customViews/*']
 const CREATE_EXE_SCRIPT_FILES = ['./createExeScripts/*']
+const LICENCE_FILES = ['./licences/*']
 
 function scripts() {
     const tsResult = tsProject.src()
@@ -29,6 +30,11 @@ function setCreateExeScripts() {
         .pipe(gulp.dest('dist'))
 }
 
+function setLicences() {
+    return gulp.src(LICENCE_FILES)
+        .pipe(gulp.dest('dist/licences'))
+}
+
 function clean(cb) {
     rimraf('./dist', cb)
 }
@@ -38,4 +44,4 @@ function build() {
 }
 
 exports.clean = clean
-exports.build = gulp.series(clean, gulp.parallel(build, setViews, setCustomViews, setCreateExeScripts))
+exports.build = gulp.series(clean, gulp.parallel(build, setViews, setCustomViews, setCreateExeScripts, setLicences))
