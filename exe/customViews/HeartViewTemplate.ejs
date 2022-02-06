@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- ▼▼▼ scriptタグを自由に追加することができます。 -->
+    <!-- ▲▲▲ scriptタグを自由に追加することができます。 -->
+    <script>
+        const reloadTime = <%= reloadTime %>
+        const getHeartbeatUrl = "<%= getHeartbeatUrl %>"
+        <%- script %>
+
+        // ▼▼▼ 心拍数取得時の処理を定義できます。
+        // 心拍数取得時に「updatePage()」がコールされるため、処理を記入してください。
+        // （引数には心拍数のデータがセットされます。）
+        function updatePage(heartbeat){
+            document.getElementById('heartbeat').innerHTML = heartbeat
+        }
+        // ▲▲▲ 心拍数取得時の処理を定義できます。
+    </script>
+</head>
+
+<body>
+    <!-- ▼▼▼ htmlを自由に記述することができます。 -->
+    <p id="heartbeat" class="heartbeat"></p>
+    <!-- ▲▲▲ htmlを自由に記述することができます。 -->
+</body>
+
+<style>
+    /* ▼▼▼ cssを自由に記述することができます。 */
+    .heartbeat {
+        font-size: 30vw;
+        color: navy;
+        margin: 0px;
+    }
+    /* ▲▲▲ cssを自由に記述することができます。 */
+</style>
+
+</html>

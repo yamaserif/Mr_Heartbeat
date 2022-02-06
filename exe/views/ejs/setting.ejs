@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>
+        <%= title %>
+    </title>
+</head>
+
+<body>
+    <a href="<%= menuUrl %>">メニューに戻る</a><br/>
+    <h1>現在の設定</h1>
+    <p>デバイスID：<%= deviceID %>
+    </p>
+    <p>データ更新頻度(ms)：<%= reloadTime %>
+    </p>
+    <p>心拍数表示ページのレイアウトファイル：<%= viewEjsName %>
+    </p>
+
+    <h1>設定変更</h1>
+    <form action="<%= settingUrl %>" method="get">
+        <p>デバイスID(未記入で「すべてのデバイス」)：<br/>
+            <input type="number" name="deviceID" value="<%= deviceID %>" size="20" /></p>
+        <p>データ更新頻度(ms)：<br/>
+            <input type="number" name="reloadTime" value="<%= reloadTime %>" size="20" required/></p>
+        <p>心拍数表示ページのレイアウトファイル：<br/>
+            <input type="file" name="viewEjsName" accept=".ejs"></p>
+        <input type="submit" value="設定する">
+
+        <p>注：設定変更後は「心拍数表示ページ」をリロードしてください</p>
+    </form>
+</body>
+
+</html>

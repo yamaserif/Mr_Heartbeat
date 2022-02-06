@@ -1,0 +1,478 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- ▼▼▼ scriptタグを自由に追加することができます。 -->
+    <!-- ▲▲▲ scriptタグを自由に追加することができます。 -->
+    <script>
+        const reloadTime = <%= reloadTime %>
+        const getHeartbeatUrl = "<%= getHeartbeatUrl %>"
+        <%- script %>
+
+        // ▼▼▼ 心拍数取得時の処理を定義できます。
+        // 心拍数取得時に「updatePage()」がコールされるため、処理を記入してください。
+        // （引数には心拍数のデータがセットされます。）
+        function updatePage(heartbeat){
+            setHeartbeat(heartbeat)
+        }
+
+        const GREEN_ZONE_BPM = 85
+        const YELLOW_ZONE_BPM = 100
+
+        let startFlag = false
+        let secTimer = 0
+        let beatTime = 0
+        let beatSecTime = 1
+        function setHeartbeat(bpm){
+            document.getElementById('heartbeat').innerHTML = '♥' + bpm
+
+            if(bpm !== '' && !startFlag){
+                startMovePoint()
+                setCheckTimer()
+                startFlag = true
+            }
+            else if(bpm === 0){
+                beatSecTime = Infinity
+            }
+            else{
+                if(bpm <= GREEN_ZONE_BPM){
+                    changeColorTheme(0) // green
+                }
+                else if(bpm <= YELLOW_ZONE_BPM){
+                    changeColorTheme(1) // yellow
+                }
+                else{
+                    changeColorTheme(2) // red
+                }
+                beatSecTime = 60 / bpm
+            }
+        }
+
+        function setCheckTimer(){
+            setInterval(() => {
+                secTimer += 0.01
+                if(secTimer >= beatSecTime){
+                    beatStart()
+                    secTimer = 0
+                }
+            }, 10)
+        }
+
+        function beatStart(){
+            beatFlag = true
+        }
+
+        let colorThemeNum = 0 // green
+        function changeColorTheme(changeColorThemeNum){
+            if(colorThemeNum === changeColorThemeNum){
+                // 変更の必要がない場合、早期にreturnする
+                return
+            }
+            
+            const baseCanvasThemes = [document.getElementById('baseCanvas')]
+            const basePointThemes = [document.getElementById('point')]
+            const point1Themes = [...Array(8)].map((_, index) => {
+                return document.getElementById('point' + (index + 1))
+            })
+            const point2Themes = [...Array(8)].map((_, index) => {
+                return document.getElementById('point' + (index + 9))
+            })
+            const point3Themes = [...Array(8)].map((_, index) => {
+                return document.getElementById('point' + (index + 17))
+            })
+            const point4Themes = [...Array(8)].map((_, index) => {
+                return document.getElementById('point' + (index + 25))
+            })
+            const point5Themes = [...Array(8)].map((_, index) => {
+                return document.getElementById('point' + (index + 33))
+            })
+            const heartbeatThemes = [document.getElementById('heartbeat')]
+            const lines = document.getElementById('lines')
+            const mainLineThemes = [...lines.childNodes].filter(node => {
+                return node.nodeName == 'DIV'
+            })
+            const subLineThemes = mainLineThemes.flatMap(mainLine => {
+                const sublines = mainLine.firstChild
+                return [...sublines.childNodes]
+            })
+
+            classChange(baseCanvasThemes, 'baseCanvas', changeColorThemeNum)
+            classChange(basePointThemes, 'basePoint', changeColorThemeNum)
+            classChange(point1Themes, 'point1', changeColorThemeNum)
+            classChange(point2Themes, 'point2', changeColorThemeNum)
+            classChange(point3Themes, 'point3', changeColorThemeNum)
+            classChange(point4Themes, 'point4', changeColorThemeNum)
+            classChange(point5Themes, 'point5', changeColorThemeNum)
+            classChange(heartbeatThemes, 'heartbeat', changeColorThemeNum)
+            classChange(mainLineThemes, 'mainLine', changeColorThemeNum)
+            classChange(subLineThemes, 'subLine', changeColorThemeNum)
+            colorThemeNum = changeColorThemeNum
+        }
+
+        function classChange(themes, type, to){
+            for (let element of themes) {
+                const classList = element.classList
+                classList.remove(type + '_green')
+                classList.remove(type + '_yellow')
+                classList.remove(type + '_red')
+                switch (to) {
+                    case 0: // green
+                        classList.add(type + '_green')
+                        break
+                    case 1: // yellow
+                        classList.add(type + '_yellow')
+                        break
+                    case 2: // red
+                        classList.add(type + '_red')
+                        break
+                }
+            }
+        }
+
+        const POINT_TOP_BASE = 59
+
+        const baseMoveData = [
+            { setLeft: 0, addTop: 0 },
+            { setLeft: 1, addTop: -0.6 },
+            { setLeft: 2, addTop: -0.2 },
+            { setLeft: 3, addTop: 0 },
+            { setLeft: 4, addTop: 0.2 },
+            { setLeft: 5, addTop: 0.6 },
+            { setLeft: 6, addTop: 0 },
+            { setLeft: 8, addTop: 0.5 },
+            { setLeft: 10, addTop: -0.5 },
+            { setLeft: 12, addTop: -3.4 },
+            { setLeft: 14, addTop: 4.4 },
+            { setLeft: 16, addTop: -2.1 },
+            { setLeft: 17, addTop: 0 },
+            { setLeft: 20, addTop: -0.1 },
+            { setLeft: 21, addTop: -0.2 },
+            { setLeft: 23, addTop: -0.4 },
+            { setLeft: 25, addTop: -0.1 },
+            { setLeft: 26, addTop: 0.1 },
+            { setLeft: 28, addTop: 0.4 },
+            { setLeft: 30, addTop: 0.2 },
+            { setLeft: 32, addTop: 0.1 },
+            { setLeft: 33, addTop: 0 }
+        ]
+        let pointTop = POINT_TOP_BASE
+        let pointLeft = 0
+        let pointLeftHistory = [...Array(40)].fill({ pointTop: 0, pointLeft: 0 })
+        let beatFlag = false
+        let beatLeft = 0
+        let moveDataIdx = 0
+        let moveData = []
+        function startMovePoint(){
+            const point = document.getElementById('point')
+            const subPoints = [...Array(40)].map((_, index) => {
+                return document.getElementById('point' + (index + 1))
+            })
+
+            setInterval(() => {
+                if(beatFlag){
+                    if(baseMoveData.length <= moveDataIdx + 1){
+                        beatFlag = false
+                        moveDataIdx = 0
+                        beatLeft = 0
+                        pointTop = POINT_TOP_BASE
+                    }
+                    else if(baseMoveData[moveDataIdx + 1].setLeft <= beatLeft){
+                        moveDataIdx++
+                    }
+                    pointTop += baseMoveData[moveDataIdx].addTop
+                    let adjustLeft = (0.70 - beatSecTime)
+                    if(adjustLeft < 0){
+                        adjustLeft = 0
+                    }
+                    beatLeft += (0.2 + adjustLeft)
+                }
+                pointLeft += 0.2
+                if(pointLeft >= 99.3){
+                    pointLeft = 0
+                }
+                updatePointPlace(point, subPoints)
+                updatePointLeftHistory()
+            }, 1)
+        }
+
+        function updatePointPlace(basePoint, subPoints){
+            basePoint.style.top = pointTop + '%'
+            basePoint.style.left = pointLeft + '%'
+
+            subPoints.forEach((subPoint, index) => {
+                subPoint.style.top = pointLeftHistory[index].pointTop + '%'
+                subPoint.style.left = pointLeftHistory[index].pointLeft + '%'
+            })
+        }
+
+        function updatePointLeftHistory(){
+            pointLeftHistory.pop()
+            pointLeftHistory.unshift({
+                pointTop: pointTop,
+                pointLeft: pointLeft
+            })
+        }
+        // ▲▲▲ 心拍数取得時の処理を定義できます。
+    </script>
+</head>
+
+<body>
+    <!-- ▼▼▼ htmlを自由に記述することができます。 -->
+    <div id="baseCanvas" class="baseCanvas baseCanvas_green">
+        <div id="lines" class="lines">
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+            <div class="mainLine mainLine_green"><div class="subLines"><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div><div class="subLine subLine_green"></div></div></div>
+        </div>
+        <div id="point" class="points basePoint_green" style="top:59%; left:0%;"></div>
+        <div id="point1" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point2" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point3" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point4" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point5" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point6" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point7" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point8" class="points point1_green" style="top:59%; left:0%;"></div>
+        <div id="point9" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point10" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point11" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point12" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point13" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point14" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point15" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point16" class="points point2_green" style="top:59%; left:0%;"></div>
+        <div id="point17" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point18" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point19" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point20" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point21" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point22" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point23" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point24" class="points point3_green" style="top:59%; left:0%;"></div>
+        <div id="point25" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point26" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point27" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point28" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point29" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point30" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point31" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point32" class="points point4_green" style="top:59%; left:0%;"></div>
+        <div id="point33" class="points point5_green" style="top:59%; left:0%;"></div>
+        <div id="point34" class="points point5_green" style="top:59%; left:0%;"></div>
+        <div id="point35" class="points point5_green" style="top:59%; left:0%;"></div>
+        <div id="point36" class="points point5_green" style="top:59%; left:0%;"></div>
+        <div id="point37" class="points point5_green" style="top:59%; left:0%;"></div>
+        <div id="point38" class="points point5_green" style="top:59%; left:0%;"></div>
+        <div id="point39" class="points point5_green" style="top:59%; left:0%;"></div>
+        <div id="point40" class="points point5_green" style="top:59%; left:0%;"></div>
+        <p id="heartbeat" class="heartbeat heartbeat_green"></p>
+    </div>
+    <!-- ▲▲▲ htmlを自由に記述することができます。 -->
+</body>
+
+<style>
+    /* ▼▼▼ cssを自由に記述することができます。 */
+    .baseCanvas {
+        position: relative;
+        margin: 0px;
+        height: calc(100vw / 2.2);
+        width: 98vw;
+        background-color: rgb(22, 22, 22);
+        border: 3px solid;
+    }
+    .points {
+        position: absolute;
+        margin: 0px;
+        height: 6px;
+        width: 6px;
+        border-radius: 3px;
+    }
+    .heartbeat {
+        position: absolute;
+        margin: 0px;
+        bottom: 5px;
+        right: calc(100% / 20);
+        font-size: 10vw;
+    }
+    .lines {
+        position: absolute;
+        margin: 0px;
+        height: 100%;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+    }
+    .mainLine {
+        margin: 0px;
+        border: 1px solid;
+    }
+    .subLines {
+        margin: 0px;
+        height: 100%;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+    }
+    .subLine {
+        margin: 0px;
+        border: solid;
+        border-width: 1px 1px 0px 0px;
+    }
+
+    /* greenTheme */
+    .baseCanvas_green {
+        border-color: lime;
+    }
+    .basePoint_green {
+        background-color: limegreen;
+    }
+    .point1_green {
+        background-color: rgb(50, 205, 50);
+    }
+    .point2_green {
+        background-color: rgb(45, 175, 45);
+    }
+    .point3_green {
+        background-color: rgb(40, 145, 40);
+    }
+    .point4_green {
+        background-color: rgb(35, 115, 35);
+    }
+    .point5_green {
+        background-color: rgb(30, 85, 30);
+    }
+    .heartbeat_green {
+        color: limegreen;
+    }
+    .mainLine_green {
+        border-color: darkgreen;
+    }
+    .subLine_green {
+        border-color: rgb(0, 70, 0);
+    }
+
+    /* yellowTheme */
+    .baseCanvas_yellow {
+        border-color: yellow;
+    }
+    .basePoint_yellow {
+        background-color: gold;
+    }
+    .point1_yellow {
+        background-color: rgb(255, 215, 0);
+    }
+    .point2_yellow {
+        background-color: rgb(225, 185, 0);
+    }
+    .point3_yellow {
+        background-color: rgb(195, 155, 0);
+    }
+    .point4_yellow {
+        background-color: rgb(165, 125, 0);
+    }
+    .point5_yellow {
+        background-color: rgb(135, 95, 0);
+    }
+    .heartbeat_yellow {
+        color: gold;
+    }
+    .mainLine_yellow {
+        border-color: peru;
+    }
+    .subLine_yellow {
+        border-color: saddlebrown;
+    }
+
+    /* redTheme */
+    .baseCanvas_red {
+        border-color: red;
+    }
+    .basePoint_red {
+        background-color: crimson;
+    }
+    .point1_red {
+        background-color: rgb(220, 20, 60);
+    }
+    .point2_red {
+        background-color: rgb(190, 15, 50);
+    }
+    .point3_red {
+        background-color: rgb(170, 10, 40);
+    }
+    .point4_red {
+        background-color: rgb(140, 5, 30);
+    }
+    .point5_red {
+        background-color: rgb(110, 0, 20);
+    }
+    .heartbeat_red {
+        color: crimson;
+    }
+    .mainLine_red {
+        border-color: darkred;
+    }
+    .subLine_red {
+        border-color: maroon;
+    }
+    /* ▲▲▲ cssを自由に記述することができます。 */
+</style>
+
+</html>
