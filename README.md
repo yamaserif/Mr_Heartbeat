@@ -7,7 +7,7 @@
 1. ANT+をPCで受け取るためのドングルを準備する。
 2. ドングルのDriver(WinUSB)を[Zadig](https://zadig.akeo.ie/)を使用してインストールする。  
 ![image](https://user-images.githubusercontent.com/62947068/152672294-59e5a9a6-35b0-4052-9658-06fc56d71cd0.png)
-3. 本リポジトリの「[app.zip](https://github.com/yamaserif/Mr_Heartbeat/blob/develop/app.zip)」をダウンロードし、展開する。
+3. 本リポジトリの「[app.zip](https://github.com/yamaserif/Mr_Heartbeat/blob/main/app.zip)」をダウンロードし、展開する。（一応、mainブランチから取得してください）
 
 ## 利用方法
 1. 「MrHeartBeat.exe」を実行し、アプリを起動する。
@@ -37,7 +37,7 @@
 #### HeartViewDefaultSample.ejs
  デフォルトで設定されているファイル（コピー）になります。  
  主にデフォルトのページの一部を改変したいという場合に利用してください。  
- （心拍数での色切り替えを行う閾値などを変更したりなど）
+ 例えば、デフォルトでは心拍数で色が切り替わるようになっていますが、その閾値（標準では85以下が緑、100以下で黄、それより高い値で赤）などを変更したりなどに利用出来ます。
  
 ## ローカルでの心拍数取得用APIとしての使用
 内部的には現在の心拍数を「 http://127.0.0.1:3000/heartbeat-point 」にて取得しています。  
