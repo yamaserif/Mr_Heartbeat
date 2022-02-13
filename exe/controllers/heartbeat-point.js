@@ -14,11 +14,13 @@ const { settings } = require('./setting');
 const stick = new Ant.GarminStick2();
 const sensor = new Ant.HeartRateSensor(stick);
 let heartbeat = 0;
+let datetime = new Date();
 function ServerSetting(entryPath, server) {
     sensor.on('hbData', function (data) {
         if (settings.deviceID == null ||
             settings.deviceID == data.DeviceID) {
             heartbeat = data.ComputedHeartRate;
+            datetime = new Date();
         }
     });
     stick.on('startup', function () {
@@ -28,7 +30,10 @@ function ServerSetting(entryPath, server) {
         console.log('Stick が見つかりません');
     }
     server.get(entryPath, (request, reply) => __awaiter(this, void 0, void 0, function* () {
-        return { heartbeatPoint: heartbeat };
+        return {
+            heartbeatPoint: heartbeat,
+            datetime: datetime.toISOString()
+        };
     }));
 }
 module.exports = {

@@ -7,9 +7,9 @@ const TITLE = '設定'
 const defaultSetting: Setting = {
   deviceID: null, // デバイスの指定なし
   reloadTime: 1000, // データ更新頻度(1000ms)
-  restingHeartRate: 60, // 安静時心拍数(60bpm)
+  restingHeartRate: 70, // 安静時心拍数(70bpm)
   viewEjsName: null, // デフォルトのビュー定義を使用
-  custom: null // カスタム設定の初期値なし
+  custom: "" // カスタム設定の初期値なし
 }
 
 let settings = defaultSetting

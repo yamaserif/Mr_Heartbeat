@@ -9,14 +9,20 @@
     <!-- ▼▼▼ scriptタグを自由に追加することができます。 -->
     <!-- ▲▲▲ scriptタグを自由に追加することができます。 -->
     <script>
-        const reloadTime = <%= reloadTime %>
         const getHeartbeatUrl = "<%= getHeartbeatUrl %>"
+        // 引数の設定値：
+        //     deviceID：デバイスID,
+        //     reloadTime：データ更新頻度(ms),
+        //     restingHeartRate：安静時心拍数(bpm),
+        //     viewEjsName：心拍数表示ページのレイアウトファイル,
+        //     custom：カスタム設定
+        const settings = <%- settings %>
         <%- script %>
 
         // ▼▼▼ 心拍数取得時の処理を定義できます。
-        // 心拍数取得時に「updatePage()」がコールされるため、処理を記入してください。
-        // （引数には心拍数のデータがセットされます。）
-        function updatePage(heartbeat){
+        // 心拍数取得時に「updatePage()」がコールされるため、処理を記入してください。(上記に書いてある設定値も利用できます)
+        // 引数：(心拍数, 心拍数の値更新時間)
+        function updatePage(heartbeat, datetime){
             document.getElementById('heartbeat').innerHTML = heartbeat
         }
         // ▲▲▲ 心拍数取得時の処理を定義できます。

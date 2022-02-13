@@ -16,9 +16,9 @@ const TITLE = '設定';
 const defaultSetting = {
     deviceID: null,
     reloadTime: 1000,
-    restingHeartRate: 60,
+    restingHeartRate: 70,
     viewEjsName: null,
-    custom: null // カスタム設定の初期値なし
+    custom: "" // カスタム設定の初期値なし
 };
 let settings = defaultSetting;
 function ServerSetting(entryPath, server) {
