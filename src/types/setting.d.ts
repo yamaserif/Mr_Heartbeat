@@ -1,7 +1,9 @@
 interface Setting {
   deviceID: number?,
   reloadTime: number,
-  viewEjsName: string?
+  restingHeartRate: number,
+  viewEjsName: string?,
+  custom: string?
 }
 
 type SettingRequest = FastifyRequest<{

@@ -15,7 +15,11 @@
     </p>
     <p>データ更新頻度(ms)：<%= reloadTime %>
     </p>
+    <p>安静時心拍数(bpm)：<%= restingHeartRate %>
+    </p>
     <p>心拍数表示ページのレイアウトファイル：<%= viewEjsName %>
+    </p>
+    <p>カスタム設定：<%= custom %>
     </p>
 
     <h1>設定変更</h1>
@@ -24,8 +28,12 @@
             <input type="number" name="deviceID" value="<%= deviceID %>" size="20" /></p>
         <p>データ更新頻度(ms)：<br/>
             <input type="number" name="reloadTime" value="<%= reloadTime %>" size="20" required/></p>
+        <p>安静時心拍数(bpm)：<br/>
+            <input type="number" name="restingHeartRate" value="<%= restingHeartRate %>" size="20" required/></p>
         <p>心拍数表示ページのレイアウトファイル：<br/>
             <input type="file" name="viewEjsName" accept=".ejs"></p>
+        <p>カスタム設定：<br/>
+            <input type="text" name="custom" value="<%= custom %>" size="20" /></p>
         <input type="submit" value="設定する">
 
         <p>注：設定変更後は「心拍数表示ページ」をリロードしてください</p>
