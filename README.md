@@ -42,4 +42,4 @@
 ## ローカルでの心拍数取得用APIとしての使用
 内部的には現在の心拍数を「 http://127.0.0.1:3000/heartbeat-point 」にて取得しています。  
 レスポンスとして、以下の形で渡されます。  
-`{"heartbeatPoint":number}`
+`{"heartbeatPoint":number,"datetime":dateString}`

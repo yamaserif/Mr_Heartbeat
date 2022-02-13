@@ -41,7 +41,7 @@ function ServerSetting(entryPath, server) {
             reply.view(viewPath, {
                 title: TITLE,
                 script: file,
-                reloadTime: settings.reloadTime,
+                settings: JSON.stringify(settings),
                 getHeartbeatUrl: GET_HEARTBEAT_URL
             });
         });
