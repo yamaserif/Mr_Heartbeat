@@ -5,13 +5,14 @@ const { settings } = require('./setting')
 const stick = new Ant.GarminStick2()
 const sensor = new Ant.HeartRateSensor(stick)
 let heartbeat = 0
-
+let datetime = new Date()
 
 function ServerSetting(entryPath: string, server: FastifyInstance) {
   sensor.on('hbData', function (data: any) {
     if (settings.deviceID == null ||
       settings.deviceID == data.DeviceID) {
       heartbeat = data.ComputedHeartRate
+      datetime = new Date()
     }
   })
 
@@ -24,7 +25,10 @@ function ServerSetting(entryPath: string, server: FastifyInstance) {
   }
 
   server.get(entryPath, async (request, reply) => {
-    return { heartbeatPoint: heartbeat }
+    return {
+      heartbeatPoint: heartbeat,
+      datetime: datetime.toISOString()
+    }
   })
 }
 
