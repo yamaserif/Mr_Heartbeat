@@ -1,6 +1,6 @@
 # Mr_Heartbeat
 「ANT+」で受信したデータを画面に表示させます。  
-![image](https://user-images.githubusercontent.com/62947068/152672982-67580407-299a-4ad4-81f4-caa3048f4790.png)
+![heartbeat](https://user-images.githubusercontent.com/62947068/153741682-9ea15472-2753-4703-a2e0-f2e3bdd218a4.gif)
 
 
 ## 準備
