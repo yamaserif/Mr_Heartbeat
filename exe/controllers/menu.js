@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const VIEW_PATH = 'views/ejs/menu.ejs';
 const GET_SETTING_URL = 'http://127.0.0.1:3000/setting';
 const GET_HEART_VIEW_URL = 'http://127.0.0.1:3000/heart-view';
-const TITLE = 'メニュー';
+const TITLE = 'メニュー(Menu)';
 function ServerSetting(entryPath, server) {
     server.get(entryPath, (request, reply) => __awaiter(this, void 0, void 0, function* () {
         reply.view(VIEW_PATH, {

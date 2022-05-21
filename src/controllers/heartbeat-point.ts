@@ -21,7 +21,7 @@ function ServerSetting(entryPath: string, server: FastifyInstance) {
   })
 
   if (!stick.open()) {
-    console.log('Stick が見つかりません')
+    console.log('Stick が見つかりません(Stick not found.)')
   }
 
   server.get(entryPath, async (request, reply) => {
