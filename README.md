@@ -1,3 +1,5 @@
+[English](https://github.com/yamaserif/Mr_Heartbeat/blob/main/README_en.md)
+
 # Mr_Heartbeat
 「ANT+」で受信したデータを画面に表示させます。  
 ![heartbeat](https://user-images.githubusercontent.com/62947068/153741682-9ea15472-2753-4703-a2e0-f2e3bdd218a4.gif)
@@ -43,3 +45,10 @@
 内部的には現在の心拍数を「 http://127.0.0.1:3000/heartbeat-point 」にて取得しています。  
 レスポンスとして、以下の形で渡されます。  
 `{"heartbeatPoint":number,"datetime":dateString}`
+ 
+## 配信等における利用について
+特に使用時にご連絡頂く必要はありません。
+ご自由にお使いください。  
+（ただし、利用時に本ソフトウェアによって損害等が発生した場合においても、開発者は責任を負わないものとします。）
+
+また、その他ソースの改変等の利用に関しましては、設定されているMITライセンスに準拠してご利用ください。

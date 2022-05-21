@@ -9,8 +9,63 @@
 </head>
 
 <body>
-    <a href="<%= settingUrl %>">設定ページ</a><br/>
-    <a href="<%= heartViewUrl %>">心拍数表示ページのプレビュー</a>
+    <a href="<%= settingUrl %>" class="change_page_button">設定ページ(Setting)</a><br/>
+    <a href="<%= heartViewUrl %>" class="change_page_button">心拍数表示ページのプレビュー(Preview of Heart Rate Display Page)</a>
 </body>
+
+<style>
+    .change_page_button {
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.5;
+        position: relative;
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-transition: all 0.3s;
+        transition: all 0.3s;
+        text-align: center;
+        vertical-align: middle;
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        color: #212529;
+        border: 2px solid #000;
+        border-radius: 0;
+        background: #ecf9fb;
+
+        -webkit-transform-style: preserve-3d;
+
+        transform-style: preserve-3d;
+    }
+
+    .change_page_button:before {
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        width: 5px;
+        height: 100%;
+
+        content: '';
+        -webkit-transition: all .3s;
+        transition: all .3s;
+
+        background: #000;
+    }
+    
+    .change_page_button:hover {
+        color: #fff;
+        background: #000;
+    }
+
+    .change_page_button:hover:before {
+        background: #fff;
+    }
+
+</style>
 
 </html>
