@@ -27,7 +27,7 @@ function ServerSetting(entryPath, server) {
         sensor.attach(0, 0);
     });
     if (!stick.open()) {
-        console.log('Stick が見つかりません');
+        console.log('Stick が見つかりません(Stick not found.)');
     }
     server.get(entryPath, (request, reply) => __awaiter(this, void 0, void 0, function* () {
         return {

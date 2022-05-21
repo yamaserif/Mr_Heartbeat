@@ -33,7 +33,7 @@ const { settings } = require('./setting');
 const VIEW_PATH = 'views/ejs/heart-view.ejs';
 const SCRIPT_PATH = './views/js/heart-view.js';
 const GET_HEARTBEAT_URL = 'http://127.0.0.1:3000/heartbeat-point';
-const TITLE = '心拍数表示ページ';
+const TITLE = '心拍数表示ページ(Preview)';
 function ServerSetting(entryPath, server) {
     server.get(entryPath, (request, reply) => __awaiter(this, void 0, void 0, function* () {
         fs.readFile(SCRIPT_PATH, (err, file) => {

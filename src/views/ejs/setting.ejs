@@ -9,35 +9,89 @@
 </head>
 
 <body>
-    <a href="<%= menuUrl %>">メニューに戻る</a><br/>
-    <h1>現在の設定</h1>
-    <p>デバイスID：<%= deviceID %>
-    </p>
-    <p>データ更新頻度(ms)：<%= reloadTime %>
-    </p>
-    <p>安静時心拍数(bpm)：<%= restingHeartRate %>
-    </p>
-    <p>心拍数表示ページのレイアウトファイル：<%= viewEjsName %>
-    </p>
-    <p>カスタム設定：<%= custom %>
-    </p>
+    <a href="<%= menuUrl %>" class="change_page_button">メニューに戻る(Back to Menu)</a><br/>
+    <h1>現在の設定(Current setting)</h1>
+    <table>
+        <tbody>
+            <tr><td>デバイスID (Device ID)</td><td>：<%= deviceID %></td></tr>
+            <tr><td>データ更新頻度 (Data update frequency)</td><td>：<%= reloadTime %> ms</td></tr>
+            <tr><td>安静時心拍数 (Resting heart rate)</td><td>：<%= restingHeartRate %> bpm</td></tr>
+            <tr><td>心拍数表示ページのレイアウトファイル (Layout file)</td><td>：<%= viewEjsName %></td></tr>
+            <tr><td>カスタム設定 (Custom setting)</td><td>：<%= custom %></td></tr>
+        </tbody>
+    </table>
 
-    <h1>設定変更</h1>
+    <h1>設定変更(Setting change)</h1>
     <form action="<%= settingUrl %>" method="get">
-        <p>デバイスID(未記入で「すべてのデバイス」)：<br/>
-            <input type="number" name="deviceID" value="<%= deviceID %>" size="20" /></p>
-        <p>データ更新頻度(ms)：<br/>
-            <input type="number" name="reloadTime" value="<%= reloadTime %>" size="20" required/></p>
-        <p>安静時心拍数(bpm)：<br/>
-            <input type="number" name="restingHeartRate" value="<%= restingHeartRate %>" size="20" required/></p>
-        <p>心拍数表示ページのレイアウトファイル：<br/>
-            <input type="file" name="viewEjsName" accept=".ejs"></p>
-        <p>カスタム設定：<br/>
-            <input type="text" name="custom" value="<%= custom %>" size="20" /></p>
-        <input type="submit" value="設定する">
+        <table>
+            <tbody>
+                <tr><td>デバイスID (Device ID) ※1</td><td>：<input type="number" name="deviceID" value="<%= deviceID %>" size="20" /></td></tr>
+                <tr><td>データ更新頻度 (Data update frequency)</td><td>：<input type="number" name="reloadTime" value="<%= reloadTime %>" size="20" required/> ms</td></tr>
+                <tr><td>安静時心拍数 (Resting heart rate)</td><td>：<input type="number" name="restingHeartRate" value="<%= restingHeartRate %>" size="20" required/> bpm</td></tr>
+                <tr><td>心拍数表示ページのレイアウトファイル (Layout file)</td><td>：<input type="file" name="viewEjsName" accept=".ejs"></td></tr>
+                <tr><td>カスタム設定 (Custom setting)</td><td>：<input type="text" name="custom" value="<%= custom %>" size="20" /></td></tr>
+            </tbody>
+        </table>
+        <input type="submit" value="設定する (Setup)">
 
-        <p>注：設定変更後は「心拍数表示ページ」をリロードしてください</p>
+        <p>※1：未記入で「すべてのデバイス」("All devices" if not filled in.)</p>
+        <p>注(Note)：設定変更後は「心拍数表示ページ」をリロードしてください (Reload the "Heart Rate Display Page" after changing the setting.)</p>
     </form>
 </body>
+
+<style>
+    .change_page_button {
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.5;
+        position: relative;
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-transition: all 0.3s;
+        transition: all 0.3s;
+        text-align: center;
+        vertical-align: middle;
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        color: #212529;
+        border: 2px solid #000;
+        border-radius: 0;
+        background: #ecf9fb;
+
+        -webkit-transform-style: preserve-3d;
+
+        transform-style: preserve-3d;
+    }
+
+    .change_page_button:before {
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        width: 5px;
+        height: 100%;
+
+        content: '';
+        -webkit-transition: all .3s;
+        transition: all .3s;
+
+        background: #000;
+    }
+    
+    .change_page_button:hover {
+        color: #fff;
+        background: #000;
+    }
+
+    .change_page_button:hover:before {
+        background: #fff;
+    }
+
+</style>
 
 </html>

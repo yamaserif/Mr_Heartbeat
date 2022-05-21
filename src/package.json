@@ -1,6 +1,6 @@
 {
   "name": "mr_heartbeat",
-  "version": "2.0.0",
+  "version": "2.5.0",
   "description": "This project get heartbeat data.",
   "main": "./index.js",
   "directories": {},
