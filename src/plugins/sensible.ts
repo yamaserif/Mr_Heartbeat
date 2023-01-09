@@ -10,7 +10,7 @@ const fpSensible = require('fastify-plugin')
  * @see https://github.com/fastify/fastify-sensible
  */
 module.exports = fpSensible(async function (fastify: any, opts: PluginMetadata | string = '') {
-  fastify.register(require('fastify-sensible'), {
+  fastify.register(require('@fastify/sensible'), {
     errorHandler: false
   })
   fastify.register(require('point-of-view'), {
