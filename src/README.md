@@ -22,3 +22,9 @@
 ### `npm run clean`
 
 「dist」ディレクトリ内のファイルを削除します。
+
+## カスタムパッチについて
+
+本リポジトリでは、ユーザー（配信者等）が `npm install` なしで直ぐに利用できるよう、必要なモジュールを `src/package_node_modules` に同梱してexeにパッキングする運用となっています。
+特に `ant-plus` モジュールについては、通信の安定性向上（一時的な切断やエラーからの自動復帰）のため、独自のパッチを当てたソースを同梱しています。(https://github.com/Loghorn/ant-plus/issues/45)
+アップデートや再インストールの際は、パッチが上書きされないよう注意してください。パッチの詳細については `src/package_node_modules/node_modules/ant-plus/PATCH_NOTE.md` をご参照ください。
