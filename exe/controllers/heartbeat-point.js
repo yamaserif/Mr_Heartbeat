@@ -26,6 +26,13 @@ function ServerSetting(entryPath, server) {
     stick.on('startup', function () {
         sensor.attach(0, 0);
     });
+    sensor.on('detached', function () {
+        try {
+            sensor.attach(0, 0);
+        } catch (e) {
+            // already attached, or stick not ready yet
+        }
+    });
     if (!stick.open()) {
         console.log('Stick が見つかりません(Stick not found.)');
     }
